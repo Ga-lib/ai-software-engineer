@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.planner_agent import run_planner_agent
+from app.agents.research_agent import run_research_agent
 from app.database.session import AsyncSessionLocal
 from app.models.task import Task, TaskStatus
 from app.schemas.task import TaskCreate
@@ -45,9 +46,9 @@ async def run_agent_pipeline(task_id: uuid.UUID) -> None:
     """
     Runs the agent pipeline for a given task, updating its status and result as it goes.
 
-    This function is designed to run as a FastAPI BackgroundTask, so it opens its OWN
-    database session rather than reusing the one from the original request (which will
-    already be closed by the time this runs).
+    Currently runs: Planner -> Research.
+    This function opens its OWN database session since it runs as a background task,
+    after the original request's session has already closed.
     """
     async with AsyncSessionLocal() as db:
         result = await db.execute(select(Task).where(Task.id == task_id))
@@ -65,9 +66,19 @@ async def run_agent_pipeline(task_id: uuid.UUID) -> None:
 
             plan = await run_planner_agent(task.prompt)
 
-            # For now, the plan IS the result. Later steps will append each
-            # subsequent agent's output here instead of overwriting it.
-            task.result = f"## Plan\n{plan}"
+            # --- Research stage ---
+            task.status = TaskStatus.RESEARCHING
+            await db.commit()
+            logger.info("Task %s entered RESEARCHING stage", task_id)
+
+            research_notes = await run_research_agent(task.prompt, plan)
+
+            # Build up the result progressively. Later agents will append to this
+            # same string rather than overwriting it.
+            task.result = (
+                f"## Plan\n{plan}\n\n"
+                f"## Research Notes\n{research_notes}"
+            )
             task.status = TaskStatus.COMPLETED
             await db.commit()
             logger.info("Task %s completed", task_id)
