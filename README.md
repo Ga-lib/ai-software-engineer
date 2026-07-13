@@ -205,13 +205,7 @@ Real end-to-end verification happens via manual testing against a live Supabase 
 
 ## 🖼️ Screenshots
 
-*(Add these once you have them)*
-
-- [ ] Swagger UI showing all endpoints (`/docs`)
-- [ ] A completed task response showing all 6 agent output sections
-- [ ] Supabase Table Editor showing the `tasks` table with a completed row
-- [ ] GitHub Actions tab showing a green CI run
-- [ ] Render dashboard showing the live deployed service
+Wait coming soon
 
 ---
 
