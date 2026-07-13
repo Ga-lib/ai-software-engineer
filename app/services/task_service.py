@@ -9,9 +9,8 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.planner_agent import run_planner_agent
-from app.agents.research_agent import run_research_agent
 from app.database.session import AsyncSessionLocal
+from app.graph.workflow import agent_graph
 from app.models.task import Task, TaskStatus
 from app.schemas.task import TaskCreate
 
@@ -44,9 +43,8 @@ async def list_tasks(db: AsyncSession, limit: int = 50) -> list[Task]:
 
 async def run_agent_pipeline(task_id: uuid.UUID) -> None:
     """
-    Runs the agent pipeline for a given task, updating its status and result as it goes.
+    Runs the full LangGraph agent pipeline for a given task, then persists the result.
 
-    Currently runs: Planner -> Research.
     This function opens its OWN database session since it runs as a background task,
     after the original request's session has already closed.
     """
@@ -59,31 +57,33 @@ async def run_agent_pipeline(task_id: uuid.UUID) -> None:
             return
 
         try:
-            # --- Planner stage ---
             task.status = TaskStatus.PLANNING
             await db.commit()
-            logger.info("Task %s entered PLANNING stage", task_id)
+            logger.info("Task %s started via LangGraph pipeline", task_id)
 
-            plan = await run_planner_agent(task.prompt)
+            initial_state = {
+                "task_id": str(task.id),
+                "user_prompt": task.prompt,
+                "plan": "",
+                "research_notes": "",
+                "generated_code": "",
+                "review_notes": "",
+                "test_results": "",
+                "documentation": "",
+                "error": "",
+            }
 
-            # --- Research stage ---
-            task.status = TaskStatus.RESEARCHING
-            await db.commit()
-            logger.info("Task %s entered RESEARCHING stage", task_id)
+            final_state = await agent_graph.ainvoke(initial_state)
 
-            research_notes = await run_research_agent(task.prompt, plan)
-
-            # Build up the result progressively. Later agents will append to this
-            # same string rather than overwriting it.
             task.result = (
-                f"## Plan\n{plan}\n\n"
-                f"## Research Notes\n{research_notes}"
+                f"## Plan\n{final_state['plan']}\n\n"
+                f"## Research Notes\n{final_state['research_notes']}"
             )
             task.status = TaskStatus.COMPLETED
             await db.commit()
             logger.info("Task %s completed", task_id)
 
-        except Exception as exc:  # noqa: BLE001 -- we want to catch any agent failure here
+        except Exception as exc:  # noqa: BLE001 -- we want to catch any pipeline failure here
             logger.exception("Task %s failed during pipeline execution", task_id)
             task.status = TaskStatus.FAILED
             task.error_message = str(exc)
