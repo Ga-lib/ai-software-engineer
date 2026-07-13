@@ -1,11 +1,17 @@
 """
 Builds the LangGraph workflow that orchestrates all agent nodes.
-Currently: Planner -> Research -> Coding -> Reviewer. More nodes are added here in later steps.
+Currently: Planner -> Research -> Coding -> Reviewer -> Tester. More nodes are added here in later steps.
 """
 
 from langgraph.graph import END, StateGraph
 
-from app.graph.nodes import coding_node, planner_node, research_node, reviewer_node
+from app.graph.nodes import (
+    coding_node,
+    planner_node,
+    research_node,
+    reviewer_node,
+    tester_node,
+)
 from app.graph.state import AgentState
 
 
@@ -13,8 +19,8 @@ def build_agent_graph():
     """
     Constructs and compiles the LangGraph workflow.
 
-    Nodes: planner, research, coding, reviewer
-    Edges: START -> planner -> research -> coding -> reviewer -> END
+    Nodes: planner, research, coding, reviewer, tester
+    Edges: START -> planner -> research -> coding -> reviewer -> tester -> END
     """
     graph = StateGraph(AgentState)
 
@@ -22,12 +28,14 @@ def build_agent_graph():
     graph.add_node("research", research_node)
     graph.add_node("coding", coding_node)
     graph.add_node("reviewer", reviewer_node)
+    graph.add_node("tester", tester_node)
 
     graph.set_entry_point("planner")
     graph.add_edge("planner", "research")
     graph.add_edge("research", "coding")
     graph.add_edge("coding", "reviewer")
-    graph.add_edge("reviewer", END)
+    graph.add_edge("reviewer", "tester")
+    graph.add_edge("tester", END)
 
     return graph.compile()
 
