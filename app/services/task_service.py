@@ -75,6 +75,15 @@ async def run_agent_pipeline(task_id: uuid.UUID) -> None:
 
             final_state = await agent_graph.ainvoke(initial_state)
 
+            # Structured, per-agent fields -- the primary way consumers should read results.
+            task.plan = final_state["plan"]
+            task.research_notes = final_state["research_notes"]
+            task.generated_code = final_state["generated_code"]
+            task.review_notes = final_state["review_notes"]
+            task.test_results = final_state["test_results"]
+            task.documentation = final_state["documentation"]
+
+            # Combined summary, kept for convenience/backward compatibility.
             task.result = (
                 f"## Plan\n{final_state['plan']}\n\n"
                 f"## Research Notes\n{final_state['research_notes']}\n\n"

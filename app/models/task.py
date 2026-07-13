@@ -40,7 +40,18 @@ class Task(Base):
     status: Mapped[TaskStatus] = mapped_column(
         Enum(TaskStatus, name="task_status"), default=TaskStatus.PENDING, nullable=False
     )
+
+    # Combined, human-readable summary of the whole pipeline (kept for convenience).
     result: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Structured, per-agent outputs -- the fields a real API consumer should use.
+    plan: Mapped[str | None] = mapped_column(Text, nullable=True)
+    research_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    generated_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    test_results: Mapped[str | None] = mapped_column(Text, nullable=True)
+    documentation: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(

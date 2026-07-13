@@ -31,7 +31,18 @@ class TaskRead(BaseModel):
     id: uuid.UUID
     prompt: str
     status: TaskStatus
+
+    # Combined summary (kept for convenience/backward compatibility).
     result: str | None
+
+    # Structured, per-agent outputs.
+    plan: str | None
+    research_notes: str | None
+    generated_code: str | None
+    review_notes: str | None
+    test_results: str | None
+    documentation: str | None
+
     error_message: str | None
     created_at: datetime
     updated_at: datetime
