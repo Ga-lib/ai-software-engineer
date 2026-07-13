@@ -9,6 +9,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.routes import tasks
 from app.core.config import get_settings
 from app.core.logging_config import configure_logging
 from app.database.session import get_db
@@ -23,6 +24,8 @@ app = FastAPI(
     description="A production-grade multi-agent system for AI-assisted software engineering.",
     version=settings.app_version,
 )
+
+app.include_router(tasks.router)
 
 
 @app.on_event("startup")
