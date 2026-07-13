@@ -2,7 +2,7 @@
 
 A production-grade multi-agent system where six specialized AI agents collaborate — planning, researching, coding, reviewing, testing, and documenting — to turn a single natural-language request into a complete, tested, documented software artifact.
 
-> ⚠️ **Live demo:** `<PASTE_YOUR_RENDER_URL_HERE>/docs` — *(fill this in once Step 21 deployment is complete; free-tier services sleep after 15 min of inactivity, so the first request may take 30-60s to wake up)*
+> ⚠️ **Live demo:** Coming soon
 
 ---
 
