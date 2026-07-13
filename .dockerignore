@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.git/
+.github/
+.vscode/
+.pytest_cache/
+tests/
+docs/
+*.md
