@@ -4,7 +4,6 @@ This will grow to include agent routes, middleware, and startup/shutdown events.
 """
 
 import logging
-from app.agents.planner_agent import run_planner_agent
 
 from fastapi import FastAPI, Depends
 from sqlalchemy import text
@@ -61,8 +60,3 @@ async def health_check_db(db: AsyncSession = Depends(get_db)) -> dict:
     return {"status": "ok", "database": "connected", "result": value}
 
 
-@app.post("/test/planner", tags=["System"])
-async def test_planner(prompt: str) -> dict:
-    """Temporary endpoint to manually test the Planner Agent. Will be removed later."""
-    plan = await run_planner_agent(prompt)
-    return {"prompt": prompt, "plan": plan}

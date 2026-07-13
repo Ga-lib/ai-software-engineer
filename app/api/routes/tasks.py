@@ -5,7 +5,7 @@ API routes for creating and retrieving tasks.
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
@@ -19,10 +19,16 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 @router.post("", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 async def create_task(
-    task_in: TaskCreate, db: AsyncSession = Depends(get_db)
+    task_in: TaskCreate,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
 ) -> TaskRead:
-    """Submits a new request for the AI agent pipeline to process."""
+    """
+    Submits a new request for the AI agent pipeline to process.
+    Returns immediately with status 'pending' — the pipeline runs in the background.
+    """
     task = await task_service.create_task(db, task_in)
+    background_tasks.add_task(task_service.run_agent_pipeline, task.id)
     return task
 
 
