@@ -6,6 +6,7 @@ the shared AgentState and writing its output back into that same state.
 import logging
 
 from app.agents.coding_agent import run_coding_agent
+from app.agents.documentation_agent import run_documentation_agent
 from app.agents.planner_agent import run_planner_agent
 from app.agents.research_agent import run_research_agent
 from app.agents.reviewer_agent import run_reviewer_agent
@@ -52,3 +53,12 @@ async def tester_node(state: AgentState) -> dict:
     logger.info("Graph: running tester_node for task %s", state["task_id"])
     test_code = await run_tester_agent(state["generated_code"], state["review_notes"])
     return {"test_results": test_code}
+
+
+async def documentation_node(state: AgentState) -> dict:
+    """Runs the Documentation Agent and writes its output into state['documentation']."""
+    logger.info("Graph: running documentation_node for task %s", state["task_id"])
+    documentation = await run_documentation_agent(
+        state["user_prompt"], state["generated_code"], state["test_results"]
+    )
+    return {"documentation": documentation}
