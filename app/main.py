@@ -5,10 +5,13 @@ This will grow to include agent routes, middleware, and startup/shutdown events.
 
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.logging_config import configure_logging
+from app.database.session import get_db
 
 settings = get_settings()
 configure_logging(debug=settings.debug)
@@ -43,3 +46,12 @@ async def health_check() -> dict:
         "service": settings.app_name,
         "debug_mode": settings.debug,
     }
+
+
+@app.get("/health/db", tags=["System"])
+async def health_check_db(db: AsyncSession = Depends(get_db)) -> dict:
+    """Verifies the app can actually talk to the Supabase PostgreSQL database."""
+    result = await db.execute(text("SELECT 1"))
+    value = result.scalar()
+    logger.info("Database health check result: %s", value)
+    return {"status": "ok", "database": "connected", "result": value}
