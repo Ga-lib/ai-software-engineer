@@ -78,7 +78,8 @@ async def run_agent_pipeline(task_id: uuid.UUID) -> None:
             task.result = (
                 f"## Plan\n{final_state['plan']}\n\n"
                 f"## Research Notes\n{final_state['research_notes']}\n\n"
-                f"## Generated Code\n{final_state['generated_code']}"
+                f"## Generated Code\n{final_state['generated_code']}\n\n"
+                f"## Review Notes\n{final_state['review_notes']}"
             )
             task.status = TaskStatus.COMPLETED
             await db.commit()

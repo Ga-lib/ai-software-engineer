@@ -8,6 +8,7 @@ import logging
 from app.agents.coding_agent import run_coding_agent
 from app.agents.planner_agent import run_planner_agent
 from app.agents.research_agent import run_research_agent
+from app.agents.reviewer_agent import run_reviewer_agent
 from app.graph.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -34,3 +35,12 @@ async def coding_node(state: AgentState) -> dict:
         state["user_prompt"], state["plan"], state["research_notes"]
     )
     return {"generated_code": generated_code}
+
+
+async def reviewer_node(state: AgentState) -> dict:
+    """Runs the Reviewer Agent and writes its output into state['review_notes']."""
+    logger.info("Graph: running reviewer_node for task %s", state["task_id"])
+    review_notes = await run_reviewer_agent(
+        state["plan"], state["research_notes"], state["generated_code"]
+    )
+    return {"review_notes": review_notes}
